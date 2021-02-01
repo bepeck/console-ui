@@ -7,38 +7,41 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 
-class ConsoleScenario {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class ConsoleScenario {
 
     private final Queue<Event> queue = new LinkedList<>();
 
-    public ConsoleScenario(final List<Event> events) {
+    ConsoleScenario(final List<Event> events) {
         queue.addAll(events);
     }
 
     public String readLine() {
         final Event event = queue.poll();
-        if (!(event instanceof TypeLine)) {
+        if (!(event instanceof UserEnteredLineEvent)) {
             Assert.fail("expected line reading but got " + event);
         }
-        final String line = ((TypeLine) event).line;
+        final String line = ((UserEnteredLineEvent) event).line;
         System.out.println(event);
         return line;
     }
 
     public void writeLine(String line) {
         final Event event = queue.poll();
-        Assert.assertEquals(event, new WriteLine(line));
+        assertEquals(event, new AppPrintedLineEvent(line));
         System.out.println(event);
     }
 
     public void checkStep(String name) {
         final Event event = queue.poll();
-        Assert.assertEquals(event, new Step(name));
+        assertEquals(event, new StepEvent(name));
         System.out.println(event);
     }
 
     void checkFinish() {
-        Assert.assertTrue(queue.isEmpty());
+        assertTrue(queue.isEmpty());
     }
 
     static ConsoleScenarioBuilder builder() {
@@ -53,17 +56,17 @@ class ConsoleScenario {
         }
 
         public ConsoleScenarioBuilder type(String line) {
-            events.add(new TypeLine(line));
+            events.add(new UserEnteredLineEvent(line));
             return this;
         }
 
         public ConsoleScenarioBuilder read(String line) {
-            events.add(new WriteLine(line));
+            events.add(new AppPrintedLineEvent(line));
             return this;
         }
 
         public ConsoleScenarioBuilder step(String name) {
-            events.add(new Step(name));
+            events.add(new StepEvent(name));
             return this;
         }
 
@@ -75,10 +78,10 @@ class ConsoleScenario {
     interface Event {
     }
 
-    static class TypeLine implements Event {
-        public final String line;
+    static class UserEnteredLineEvent implements Event {
+        final String line;
 
-        TypeLine(String line) {
+        UserEnteredLineEvent(String line) {
             this.line = line;
         }
 
@@ -86,7 +89,7 @@ class ConsoleScenario {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            TypeLine readLine = (TypeLine) o;
+            UserEnteredLineEvent readLine = (UserEnteredLineEvent) o;
             return Objects.equals(line, readLine.line);
         }
 
@@ -101,10 +104,10 @@ class ConsoleScenario {
         }
     }
 
-    static class WriteLine implements Event {
+    static class AppPrintedLineEvent implements Event {
         final String line;
 
-        WriteLine(String line) {
+        AppPrintedLineEvent(String line) {
             this.line = line;
         }
 
@@ -112,7 +115,7 @@ class ConsoleScenario {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            WriteLine writeLine = (WriteLine) o;
+            AppPrintedLineEvent writeLine = (AppPrintedLineEvent) o;
             return Objects.equals(line, writeLine.line);
         }
 
@@ -127,10 +130,10 @@ class ConsoleScenario {
         }
     }
 
-    static class Step implements Event {
+    static class StepEvent implements Event {
         final String name;
 
-        Step(String line) {
+        StepEvent(String line) {
             this.name = line;
         }
 
@@ -138,7 +141,7 @@ class ConsoleScenario {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            Step step = (Step) o;
+            StepEvent step = (StepEvent) o;
             return Objects.equals(name, step.name);
         }
 
