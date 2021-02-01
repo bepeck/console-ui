@@ -3,20 +3,16 @@ package console.framework;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.function.Consumer;
 
 public class CommandRouterTest {
     @Test
     public void chooseCommandTest() {
-        final Scenario scenario = new Scenario();
+        final ConsoleScenario scenario = new ConsoleScenario();
 
-        scenario.out("enter 0 to command 1");
-        scenario.out("enter 1 to command 2");
-        scenario.in("1");
+        scenario.read("enter 0 to command 1");
+        scenario.read("enter 1 to command 2");
+        scenario.type("1");
         scenario.step("perform command");
 
         final Command command1 = newCommand("command 1");
@@ -45,13 +41,13 @@ public class CommandRouterTest {
 
     @Test
     public void chooseNonExistingCommandTest() {
-        final Scenario scenario = new Scenario();
+        final ConsoleScenario scenario = new ConsoleScenario();
 
-        scenario.out("enter 0 to command 1");
-        scenario.out("enter 1 to command 2");
-        scenario.in("2");
-        scenario.out("wrong command number");
-        scenario.in("0");
+        scenario.read("enter 0 to command 1");
+        scenario.read("enter 1 to command 2");
+        scenario.type("2");
+        scenario.read("wrong command number");
+        scenario.type("0");
         scenario.step("perform command");
 
         final Command command1 = newCommand("command 1");
@@ -80,13 +76,13 @@ public class CommandRouterTest {
 
     @Test
     public void enterInvalidStringAsCommandNumber() {
-        final Scenario scenario = new Scenario();
+        final ConsoleScenario scenario = new ConsoleScenario();
 
-        scenario.out("enter 0 to command 1");
-        scenario.out("enter 1 to command 2");
-        scenario.in("ahaha");
-        scenario.out("can't read command number");
-        scenario.in("0");
+        scenario.read("enter 0 to command 1");
+        scenario.read("enter 1 to command 2");
+        scenario.type("ahaha");
+        scenario.read("can't read command number");
+        scenario.type("0");
         scenario.step("perform command");
 
         final Command command1 = newCommand("command 1");
@@ -115,13 +111,13 @@ public class CommandRouterTest {
 
     @Test
     public void handleCommandException() {
-        final Scenario scenario = new Scenario();
+        final ConsoleScenario scenario = new ConsoleScenario();
 
-        scenario.out("enter 0 to command 1");
-        scenario.out("enter 1 to command 2");
-        scenario.in("0");
+        scenario.read("enter 0 to command 1");
+        scenario.read("enter 1 to command 2");
+        scenario.type("0");
         scenario.step("perform command");
-        scenario.out("failed: command is failed");
+        scenario.read("failed: command is failed");
 
         final Command command1 = newCommand("command 1");
         final Command command2 = newCommand("command 2");
@@ -171,136 +167,5 @@ public class CommandRouterTest {
                 throw new UnsupportedOperationException();
             }
         };
-    }
-
-    static class Scenario {
-
-        final Queue<Event> queue = new LinkedList<>();
-
-        void in(String line) {
-            queue.add(new ReadLine(line));
-        }
-
-        void out(String line) {
-            queue.add(new WriteLine(line));
-        }
-
-        void step(String name) {
-            queue.add(new Step(name));
-        }
-
-        final ConsoleReader reader = () -> {
-            final Event event = queue.poll();
-            if (!(event instanceof ReadLine)) {
-                Assert.fail("expected line reading but got " + event);
-            }
-            final String line = ((ReadLine) event).line;
-            System.out.println("<<" + line);
-            return line;
-        };
-
-        final ConsoleWriter writer = (line) -> {
-            final Event event = queue.poll();
-            Assert.assertEquals(event, new WriteLine(line));
-            System.out.println(">>" + line);
-        };
-
-        final Consumer<String> stepChecker = (name) -> {
-            final Event event = queue.poll();
-            Assert.assertEquals(event, new Step(name));
-            System.out.println("!!" + name);
-        };
-
-        void checkFinish() {
-            Assert.assertTrue("", queue.isEmpty());
-        }
-    }
-
-    interface Event {
-
-    }
-
-    public static class ReadLine implements Event {
-        public final String line;
-
-        ReadLine(String line) {
-            this.line = line;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ReadLine readLine = (ReadLine) o;
-            return Objects.equals(line, readLine.line);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(line);
-        }
-
-        @Override
-        public String toString() {
-            return "ReadLine{" +
-                    "line='" + line + '\'' +
-                    '}';
-        }
-    }
-
-    public static class WriteLine implements Event {
-        public final String line;
-
-        WriteLine(String line) {
-            this.line = line;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            WriteLine writeLine = (WriteLine) o;
-            return Objects.equals(line, writeLine.line);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(line);
-        }
-
-        @Override
-        public String toString() {
-            return "WriteLine{" +
-                    "line='" + line + '\'' +
-                    '}';
-        }
-    }
-
-    public static class Step implements Event {
-        public final String name;
-
-        Step(String line) {
-            this.name = line;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Step step = (Step) o;
-            return Objects.equals(name, step.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(name);
-        }
-
-        @Override
-        public String toString() {
-            return "Step{" +
-                    "name='" + name + '\'' +
-                    '}';
-        }
     }
 }
