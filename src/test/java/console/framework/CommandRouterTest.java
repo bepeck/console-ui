@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CommandRouterTest {
     @Test
-    public void chooseCommandTest() {
+    public void chooseAndRunCommandTest() {
         final ConsoleScenario scenario = new ConsoleScenario();
 
         scenario.read("enter 0 to command 1");
@@ -80,7 +80,7 @@ public class CommandRouterTest {
 
         scenario.read("enter 0 to command 1");
         scenario.read("enter 1 to command 2");
-        scenario.type("ahaha");
+        scenario.type("not a number");
         scenario.read("can't read command number");
         scenario.type("0");
         scenario.step("perform command");
