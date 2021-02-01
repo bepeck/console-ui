@@ -14,6 +14,6 @@ public class CommandRouterShowCase {
                         new SayHelloCommand()
                 ),
                 new CommandHandlerImpl()
-        ).handleCommands(new Scanner(System.in), System.out);
+        ).handleCommands(new Scanner(System.in)::nextLine, System.out::println);
     }
 }

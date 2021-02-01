@@ -1,35 +1,33 @@
 package console.framework;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 public class CommandHandlerImpl implements CommandHandler {
     @Override
-    public void handleCommand(final Scanner in, final PrintStream out, final Command command) {
+    public void handleCommand(final ConsoleReader reader, final ConsoleWriter writer, final Command command) {
         final List<Argument<?>> arguments = command.getArguments();
         final Map<Object, Object> argumentValues = new HashMap<>();
         for (final Argument<?> argument : arguments) {
             while (true) {
-                printArgumentInvite(out, argument);
+                printArgumentInvite(writer, argument);
                 try {
-                    argument.convert(in, argumentValues::put);
+                    argument.convert(reader, argumentValues::put);
                     break;
                 } catch (final ArgumentCaptureException e) {
-                    printInvalidArgumentError(out, e);
+                    printInvalidArgumentError(writer, e);
                 }
             }
         }
-        command.run(out, argumentValues::get);
+        command.run(writer, argumentValues::get);
     }
 
-    private void printInvalidArgumentError(final PrintStream out, final ArgumentCaptureException e) {
-        out.println("wrong argument value: " + e.getMessage());
+    private void printInvalidArgumentError(final ConsoleWriter writer, final ArgumentCaptureException e) {
+        writer.writeLine("wrong argument value: " + e.getMessage());
     }
 
-    private void printArgumentInvite(final PrintStream out, final Argument<?> argument) {
-        out.println("enter " + argument.getInvite());
+    private void printArgumentInvite(final ConsoleWriter writer, final Argument<?> argument) {
+        writer.writeLine("enter " + argument.getInvite());
     }
 }

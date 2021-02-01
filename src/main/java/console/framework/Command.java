@@ -1,6 +1,5 @@
 package console.framework;
 
-import java.io.PrintStream;
 import java.util.List;
 
 public interface Command {
@@ -9,6 +8,6 @@ public interface Command {
 
     List<Argument<?>> getArguments();
 
-    void run(PrintStream out, ArgumentAccessor argumentAccessor);
+    void run(ConsoleWriter writer, ArgumentAccessor argumentAccessor);
 
 }

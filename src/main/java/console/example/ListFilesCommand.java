@@ -5,13 +5,13 @@ import console.framework.ArgumentAccessor;
 import console.framework.ArgumentCaptureException;
 import console.framework.ArgumentCollector;
 import console.framework.Command;
+import console.framework.ConsoleReader;
+import console.framework.ConsoleWriter;
 
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Scanner;
 
 public class ListFilesCommand implements Command {
 
@@ -25,8 +25,8 @@ public class ListFilesCommand implements Command {
         }
 
         @Override
-        public void convert(final Scanner in, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
-            final String pathString = in.nextLine();
+        public void convert(final ConsoleReader reader, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
+            final String pathString = reader.readLine();
             final Path path;
             try {
                 path = Paths.get(pathString);
@@ -57,8 +57,8 @@ public class ListFilesCommand implements Command {
         }
 
         @Override
-        public void convert(final Scanner in, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
-            switch (in.nextLine().toLowerCase()) {
+        public void convert(final ConsoleReader reader, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
+            switch (reader.readLine().toLowerCase()) {
                 case "yes" -> argumentCollector.add(SKIP_ZERO, true);
                 case "no" -> argumentCollector.add(SKIP_ZERO, false);
                 default -> throw new ArgumentCaptureException("please answer 'yes' or 'no'");
@@ -82,7 +82,7 @@ public class ListFilesCommand implements Command {
     }
 
     @Override
-    public void run(final PrintStream out, final ArgumentAccessor argumentAccessor) {
+    public void run(final ConsoleWriter writer, final ArgumentAccessor argumentAccessor) {
         final Path path = ARG_PATH.resolve(argumentAccessor);
         final Boolean skipZero = ARG_SKIP_ZERO.resolve(argumentAccessor);
 

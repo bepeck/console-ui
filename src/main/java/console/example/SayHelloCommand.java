@@ -3,8 +3,8 @@ package console.example;
 import console.framework.Argument;
 import console.framework.ArgumentAccessor;
 import console.framework.Command;
+import console.framework.ConsoleWriter;
 
-import java.io.PrintStream;
 import java.util.List;
 
 public class SayHelloCommand implements Command {
@@ -19,7 +19,7 @@ public class SayHelloCommand implements Command {
     }
 
     @Override
-    public void run(PrintStream out, ArgumentAccessor argumentAccessor) {
-        out.println("Hello!");
+    public void run(ConsoleWriter writer, ArgumentAccessor argumentAccessor) {
+        writer.writeLine("Hello!");
     }
 }

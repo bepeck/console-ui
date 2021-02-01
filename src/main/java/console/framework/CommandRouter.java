@@ -1,8 +1,6 @@
 package console.framework;
 
-import java.io.PrintStream;
 import java.util.List;
-import java.util.Scanner;
 
 import static java.lang.Integer.parseInt;
 import static java.util.Collections.unmodifiableList;
@@ -27,27 +25,31 @@ public class CommandRouter {
         }
     }
 
-    public void handleCommands(final Scanner scanner, final PrintStream out) {
-        requireNonNull(scanner);
-        requireNonNull(out);
-        printInvites(out);
+    public void handleCommands(final ConsoleReader reader, final ConsoleWriter writer) {
+        requireNonNull(reader);
+        requireNonNull(writer);
+        printInvites(writer);
         while (true) {
-            int commandNumber = readCommandNumber(scanner, out);
+            int commandNumber = readCommandNumber(reader, writer);
             if (isCommandNumberValid(commandNumber)) {
-                commandHandler.handleCommand(scanner, out, commands.get(commandNumber));
+                try {
+                    commandHandler.handleCommand(reader, writer, commands.get(commandNumber));
+                } catch (Exception e) {
+                    writer.writeLine("failed: " + e.getMessage());
+                }
                 return;
             } else {
-                printInvalidCommandNumber(out);
+                printInvalidCommandNumber(writer);
             }
         }
     }
 
-    private int readCommandNumber(final Scanner scanner, final PrintStream out) {
+    private int readCommandNumber(final ConsoleReader reader, final ConsoleWriter writer) {
         while (true) {
             try {
-                return parseInt(scanner.nextLine());
+                return parseInt(reader.readLine());
             } catch (final Exception e) {
-                printCanNotReadCommandNumber(out);
+                printCanNotReadCommandNumber(writer);
             }
         }
     }
@@ -56,17 +58,17 @@ public class CommandRouter {
         return number >= 0 && number < commands.size();
     }
 
-    private void printCanNotReadCommandNumber(final PrintStream out) {
-        out.println("can't read command number");
+    private void printCanNotReadCommandNumber(final ConsoleWriter writer) {
+        writer.writeLine("can't read command number");
     }
 
-    private void printInvalidCommandNumber(final PrintStream out) {
-        out.println("wrong command number");
+    private void printInvalidCommandNumber(final ConsoleWriter writer) {
+        writer.writeLine("wrong command number");
     }
 
-    private void printInvites(final PrintStream out) {
+    private void printInvites(final ConsoleWriter writer) {
         for (int i = 0; i < commands.size(); i++) {
-            out.println("enter " + i + " to " + commands.get(i).getInvite());
+            writer.writeLine("enter " + i + " to " + commands.get(i).getInvite());
         }
     }
 }
