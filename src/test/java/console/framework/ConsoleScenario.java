@@ -3,27 +3,19 @@ package console.framework;
 import org.junit.Assert;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.function.Consumer;
 
 class ConsoleScenario {
 
-    final Queue<Event> queue = new LinkedList<>();
+    private final Queue<Event> queue = new LinkedList<>();
 
-    void type(String line) {
-        queue.add(new TypeLine(line));
+    public ConsoleScenario(final List<Event> events) {
+        queue.addAll(events);
     }
 
-    void read(String line) {
-        queue.add(new WriteLine(line));
-    }
-
-    void step(String name) {
-        queue.add(new Step(name));
-    }
-
-    final ConsoleReader reader = () -> {
+    public String readLine() {
         final Event event = queue.poll();
         if (!(event instanceof TypeLine)) {
             Assert.fail("expected line reading but got " + event);
@@ -31,28 +23,59 @@ class ConsoleScenario {
         final String line = ((TypeLine) event).line;
         System.out.println(event);
         return line;
-    };
+    }
 
-    final ConsoleWriter writer = (line) -> {
+    public void writeLine(String line) {
         final Event event = queue.poll();
         Assert.assertEquals(event, new WriteLine(line));
         System.out.println(event);
-    };
+    }
 
-    final Consumer<String> stepChecker = (name) -> {
+    public void checkStep(String name) {
         final Event event = queue.poll();
         Assert.assertEquals(event, new Step(name));
         System.out.println(event);
-    };
+    }
 
     void checkFinish() {
-        Assert.assertTrue("", queue.isEmpty());
+        Assert.assertTrue(queue.isEmpty());
+    }
+
+    static ConsoleScenarioBuilder builder() {
+        return new ConsoleScenarioBuilder();
+    }
+
+    public static class ConsoleScenarioBuilder {
+
+        private final List<Event> events = new LinkedList<>();
+
+        ConsoleScenarioBuilder() {
+        }
+
+        public ConsoleScenarioBuilder type(String line) {
+            events.add(new TypeLine(line));
+            return this;
+        }
+
+        public ConsoleScenarioBuilder read(String line) {
+            events.add(new WriteLine(line));
+            return this;
+        }
+
+        public ConsoleScenarioBuilder step(String name) {
+            events.add(new Step(name));
+            return this;
+        }
+
+        public ConsoleScenario build() {
+            return new ConsoleScenario(events);
+        }
     }
 
     interface Event {
     }
 
-    public static class TypeLine implements Event {
+    static class TypeLine implements Event {
         public final String line;
 
         TypeLine(String line) {
@@ -126,7 +149,7 @@ class ConsoleScenario {
 
         @Override
         public String toString() {
-            return "do " + name;
+            return "!! " + name;
         }
     }
 }

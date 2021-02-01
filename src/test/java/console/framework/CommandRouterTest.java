@@ -5,15 +5,21 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static console.framework.ConsoleScenario.builder;
+
 public class CommandRouterTest {
+
     @Test
     public void chooseAndRunCommandTest() {
-        final ConsoleScenario scenario = new ConsoleScenario();
+        final ConsoleScenario scenario = builder()
+                .read("enter 0 to command 1")
+                .read("enter 1 to command 2")
+                .type("1")
+                .step("perform command")
+                .build();
 
-        scenario.read("enter 0 to command 1");
-        scenario.read("enter 1 to command 2");
-        scenario.type("1");
-        scenario.step("perform command");
+        final ConsoleReader reader = scenario::readLine;
+        final ConsoleWriter writer = scenario::writeLine;
 
         final Command command1 = newCommand("command 1");
         final Command command2 = newCommand("command 2");
@@ -22,18 +28,18 @@ public class CommandRouterTest {
                         command1,
                         command2
                 ),
-                (reader, writer, command) -> {
-                    Assert.assertSame(scenario.reader, reader);
-                    Assert.assertSame(scenario.writer, writer);
+                (r, w, command) -> {
+                    Assert.assertSame(reader, r);
+                    Assert.assertSame(writer, w);
                     Assert.assertSame(command2, command);
 
-                    scenario.stepChecker.accept("perform command");
+                    scenario.checkStep("perform command");
                 }
         );
 
         commandRouter.handleCommands(
-                scenario.reader,
-                scenario.writer
+                reader,
+                writer
         );
 
         scenario.checkFinish();
@@ -41,14 +47,14 @@ public class CommandRouterTest {
 
     @Test
     public void chooseNonExistingCommandTest() {
-        final ConsoleScenario scenario = new ConsoleScenario();
-
-        scenario.read("enter 0 to command 1");
-        scenario.read("enter 1 to command 2");
-        scenario.type("2");
-        scenario.read("wrong command number");
-        scenario.type("0");
-        scenario.step("perform command");
+        final ConsoleScenario scenario = builder()
+                .read("enter 0 to command 1")
+                .read("enter 1 to command 2")
+                .type("2")
+                .read("wrong command number")
+                .type("0")
+                .step("perform command")
+                .build();
 
         final Command command1 = newCommand("command 1");
         final Command command2 = newCommand("command 2");
@@ -58,17 +64,15 @@ public class CommandRouterTest {
                         command2
                 ),
                 (reader, writer, command) -> {
-                    Assert.assertSame(scenario.reader, reader);
-                    Assert.assertSame(scenario.writer, writer);
                     Assert.assertSame(command1, command);
 
-                    scenario.stepChecker.accept("perform command");
+                    scenario.checkStep("perform command");
                 }
         );
 
         commandRouter.handleCommands(
-                scenario.reader,
-                scenario.writer
+                scenario::readLine,
+                scenario::writeLine
         );
 
         scenario.checkFinish();
@@ -76,14 +80,14 @@ public class CommandRouterTest {
 
     @Test
     public void enterInvalidStringAsCommandNumber() {
-        final ConsoleScenario scenario = new ConsoleScenario();
-
-        scenario.read("enter 0 to command 1");
-        scenario.read("enter 1 to command 2");
-        scenario.type("not a number");
-        scenario.read("can't read command number");
-        scenario.type("0");
-        scenario.step("perform command");
+        final ConsoleScenario scenario = builder()
+                .read("enter 0 to command 1")
+                .read("enter 1 to command 2")
+                .type("not a number")
+                .read("can't read command number")
+                .type("0")
+                .step("perform command")
+                .build();
 
         final Command command1 = newCommand("command 1");
         final Command command2 = newCommand("command 2");
@@ -93,17 +97,15 @@ public class CommandRouterTest {
                         command2
                 ),
                 (reader, writer, command) -> {
-                    Assert.assertSame(scenario.reader, reader);
-                    Assert.assertSame(scenario.writer, writer);
                     Assert.assertSame(command1, command);
 
-                    scenario.stepChecker.accept("perform command");
+                    scenario.checkStep("perform command");
                 }
         );
 
         commandRouter.handleCommands(
-                scenario.reader,
-                scenario.writer
+                scenario::readLine,
+                scenario::writeLine
         );
 
         scenario.checkFinish();
@@ -111,13 +113,13 @@ public class CommandRouterTest {
 
     @Test
     public void handleCommandException() {
-        final ConsoleScenario scenario = new ConsoleScenario();
-
-        scenario.read("enter 0 to command 1");
-        scenario.read("enter 1 to command 2");
-        scenario.type("0");
-        scenario.step("perform command");
-        scenario.read("failed: command is failed");
+        final ConsoleScenario scenario = builder()
+                .read("enter 0 to command 1")
+                .read("enter 1 to command 2")
+                .type("0")
+                .step("perform command")
+                .read("failed: command is failed")
+                .build();
 
         final Command command1 = newCommand("command 1");
         final Command command2 = newCommand("command 2");
@@ -127,11 +129,9 @@ public class CommandRouterTest {
                         command2
                 ),
                 (reader, writer, command) -> {
-                    Assert.assertSame(scenario.reader, reader);
-                    Assert.assertSame(scenario.writer, writer);
                     Assert.assertSame(command1, command);
 
-                    scenario.stepChecker.accept("perform command");
+                    scenario.checkStep("perform command");
 
                     throw new RuntimeException("command is failed");
                 }
@@ -139,8 +139,8 @@ public class CommandRouterTest {
 
         try {
             commandRouter.handleCommands(
-                    scenario.reader,
-                    scenario.writer
+                    scenario::readLine,
+                    scenario::writeLine
             );
         } catch (Exception e) {
             Assert.assertEquals("command is failed", e.getMessage());
