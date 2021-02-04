@@ -156,6 +156,68 @@ public class CommandHandlerTest {
         scenario.checkFinish();
     }
 
+    @Test
+    public void commandInvocationFailed() {
+        ConsoleScenario scenario = ConsoleScenario.builder()
+                .read("enter smth")
+                .type("ahaha")
+                .step("invoke command")
+                .build();
+
+        Command<CommandInvocationFailedArgs> command = new Command<>() {
+
+            @Override
+            public String getInvite() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<Argument<CommandInvocationFailedArgs>> getArguments() {
+                return List.of(
+                        new Argument<>() {
+                            @Override
+                            public String getInvite() {
+                                return "smth";
+                            }
+
+                            @Override
+                            public void convert(
+                                    final ConsoleReader reader,
+                                    final CommandInvocationFailedArgs args
+                            ) {
+                                args.smth = reader.readLine();
+                            }
+                        }
+                );
+            }
+
+            @Override
+            public CommandInvocationFailedArgs newArgumentCollector() {
+                return new CommandInvocationFailedArgs();
+            }
+
+            @Override
+            public void run(final ConsoleWriter writer, final CommandInvocationFailedArgs args) {
+                scenario.checkStep("invoke command");
+
+                throw new RuntimeException(args.smth);
+            }
+        };
+
+        try {
+            new CommandHandlerImpl().handleCommand(
+                    scenario::readLine,
+                    scenario::writeLine,
+                    command
+            );
+        } catch (final Exception e) {
+            assertEquals("ahaha", e.getMessage());
+            assertEquals(RuntimeException.class, e.getClass());
+        }
+
+        scenario.checkFinish();
+    }
+
     static class HappyPathArgs {
         boolean hui;
         int zeroOrOne;
@@ -163,5 +225,9 @@ public class CommandHandlerTest {
 
     static class EnterInvalidValueArgs {
         String zero;
+    }
+
+    static class CommandInvocationFailedArgs {
+        String smth;
     }
 }
