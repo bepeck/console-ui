@@ -2,12 +2,13 @@ package console.framework;
 
 import java.util.List;
 
-public interface Command {
+public interface Command<ARGS> {
 
     String getInvite();
 
-    List<Argument<?>> getArguments();
+    List<Argument<ARGS>> getArguments();
 
-    void run(ConsoleWriter writer, ArgumentAccessor argumentAccessor);
+    void run(ConsoleWriter writer, ARGS args);
 
+    ARGS newArgumentCollector();
 }

@@ -21,19 +21,22 @@ public class CommandRouterTest {
         final ConsoleReader reader = scenario::readLine;
         final ConsoleWriter writer = scenario::writeLine;
 
-        final Command command1 = newCommand("command 1");
-        final Command command2 = newCommand("command 2");
+        final Command<?> command1 = newCommand("command 1");
+        final Command<?> command2 = newCommand("command 2");
         final CommandRouter commandRouter = new CommandRouter(
                 List.of(
                         command1,
                         command2
                 ),
-                (r, w, command) -> {
-                    Assert.assertSame(reader, r);
-                    Assert.assertSame(writer, w);
-                    Assert.assertSame(command2, command);
+                new CommandHandler() {
+                    @Override
+                    public <ARGS> void handleCommand(ConsoleReader r, ConsoleWriter w, Command<ARGS> command) {
+                        Assert.assertSame(reader, r);
+                        Assert.assertSame(writer, w);
+                        Assert.assertSame(command2, command);
 
-                    scenario.checkStep("perform command");
+                        scenario.checkStep("perform command");
+                    }
                 }
         );
 
@@ -56,17 +59,20 @@ public class CommandRouterTest {
                 .step("perform command")
                 .build();
 
-        final Command command1 = newCommand("command 1");
-        final Command command2 = newCommand("command 2");
+        final Command<?> command1 = newCommand("command 1");
+        final Command<?> command2 = newCommand("command 2");
         final CommandRouter commandRouter = new CommandRouter(
                 List.of(
                         command1,
                         command2
                 ),
-                (reader, writer, command) -> {
-                    Assert.assertSame(command1, command);
+                new CommandHandler() {
+                    @Override
+                    public <ARGS> void handleCommand(ConsoleReader r, ConsoleWriter w, Command<ARGS> command) {
+                        Assert.assertSame(command1, command);
 
-                    scenario.checkStep("perform command");
+                        scenario.checkStep("perform command");
+                    }
                 }
         );
 
@@ -89,17 +95,20 @@ public class CommandRouterTest {
                 .step("perform command")
                 .build();
 
-        final Command command1 = newCommand("command 1");
-        final Command command2 = newCommand("command 2");
+        final Command<?> command1 = newCommand("command 1");
+        final Command<?> command2 = newCommand("command 2");
         final CommandRouter commandRouter = new CommandRouter(
                 List.of(
                         command1,
                         command2
                 ),
-                (reader, writer, command) -> {
-                    Assert.assertSame(command1, command);
+                new CommandHandler() {
+                    @Override
+                    public <ARGS> void handleCommand(ConsoleReader r, ConsoleWriter w, Command<ARGS> command) {
+                        Assert.assertSame(command1, command);
 
-                    scenario.checkStep("perform command");
+                        scenario.checkStep("perform command");
+                    }
                 }
         );
 
@@ -121,19 +130,22 @@ public class CommandRouterTest {
                 .read("failed: command is failed")
                 .build();
 
-        final Command command1 = newCommand("command 1");
-        final Command command2 = newCommand("command 2");
+        final Command<?> command1 = newCommand("command 1");
+        final Command<?> command2 = newCommand("command 2");
         final CommandRouter commandRouter = new CommandRouter(
                 List.of(
                         command1,
                         command2
                 ),
-                (reader, writer, command) -> {
-                    Assert.assertSame(command1, command);
+                new CommandHandler() {
+                    @Override
+                    public <ARGS> void handleCommand(ConsoleReader r, ConsoleWriter w, Command<ARGS> command) {
+                        Assert.assertSame(command1, command);
 
-                    scenario.checkStep("perform command");
+                        scenario.checkStep("perform command");
 
-                    throw new RuntimeException("command is failed");
+                        throw new RuntimeException("command is failed");
+                    }
                 }
         );
 
@@ -150,20 +162,25 @@ public class CommandRouterTest {
         scenario.checkFinish();
     }
 
-    private Command newCommand(String name) {
-        return new Command() {
+    private Command<?> newCommand(String name) {
+        return new Command<Void>() {
             @Override
             public String getInvite() {
                 return name;
             }
 
             @Override
-            public List<Argument<?>> getArguments() {
+            public List<Argument<Void>> getArguments() {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public void run(ConsoleWriter writer, ArgumentAccessor argumentAccessor) {
+            public void run(final ConsoleWriter writer, final Void args) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Void newArgumentCollector() {
                 throw new UnsupportedOperationException();
             }
         };

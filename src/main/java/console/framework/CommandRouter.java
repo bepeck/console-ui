@@ -8,17 +8,17 @@ import static java.util.Objects.requireNonNull;
 
 public class CommandRouter {
 
-    private final List<Command> commands;
+    private final List<Command<?>> commands;
     private final CommandHandler commandHandler;
 
-    public CommandRouter(final List<Command> commands, final CommandHandler commandHandler) {
+    public CommandRouter(final List<Command<?>> commands, final CommandHandler commandHandler) {
         checkInvitesUnique(requireNonNull(commands));
 
         this.commands = unmodifiableList(commands);
         this.commandHandler = requireNonNull(commandHandler);
     }
 
-    private void checkInvitesUnique(final List<Command> commands) {
+    private void checkInvitesUnique(final List<Command<?>> commands) {
         final long count = requireNonNull(commands).stream().map(Command::getInvite).distinct().count();
         if (count != commands.size()) {
             throw new IllegalArgumentException("there are non-unique invites");

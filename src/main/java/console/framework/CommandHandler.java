@@ -1,5 +1,5 @@
 package console.framework;
 
 interface CommandHandler {
-    void handleCommand(ConsoleReader reader, ConsoleWriter writer, Command command);
+    <ARGS> void handleCommand(ConsoleReader reader, ConsoleWriter writer, Command<ARGS> command);
 }

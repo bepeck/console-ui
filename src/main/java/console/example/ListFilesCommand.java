@@ -1,9 +1,7 @@
 package console.example;
 
 import console.framework.Argument;
-import console.framework.ArgumentAccessor;
 import console.framework.ArgumentCaptureException;
-import console.framework.ArgumentCollector;
 import console.framework.Command;
 import console.framework.ConsoleReader;
 import console.framework.ConsoleWriter;
@@ -13,11 +11,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class ListFilesCommand implements Command {
+public class ListFilesCommand implements Command<ListFilesCommand.Args> {
 
-    private static final Argument<Path> ARG_PATH = new Argument<>() {
-
-        private static final String PATH = "path";
+    private static final Argument<ListFilesCommand.Args> ARG_PATH = new Argument<>() {
 
         @Override
         public String getInvite() {
@@ -25,7 +21,7 @@ public class ListFilesCommand implements Command {
         }
 
         @Override
-        public void convert(final ConsoleReader reader, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
+        public void convert(final ConsoleReader reader, final ListFilesCommand.Args args) throws ArgumentCaptureException {
             final String pathString = reader.readLine();
             final Path path;
             try {
@@ -35,21 +31,14 @@ public class ListFilesCommand implements Command {
             }
             final boolean directory = Files.isDirectory(path);
             if (directory) {
-                argumentCollector.add(PATH, path);
+                args.path = path;
             } else {
                 throw new ArgumentCaptureException("not a directory");
             }
         }
-
-        @Override
-        public Path resolve(final ArgumentAccessor argumentAccessor) {
-            return (Path) argumentAccessor.get(PATH);
-        }
     };
 
-    private static final Argument<Boolean> ARG_SKIP_ZERO = new Argument<>() {
-
-        private static final String SKIP_ZERO = "skipZero";
+    private static final Argument<ListFilesCommand.Args> ARG_SKIP_ZERO = new Argument<>() {
 
         @Override
         public String getInvite() {
@@ -57,17 +46,12 @@ public class ListFilesCommand implements Command {
         }
 
         @Override
-        public void convert(final ConsoleReader reader, final ArgumentCollector argumentCollector) throws ArgumentCaptureException {
+        public void convert(final ConsoleReader reader, final ListFilesCommand.Args args) throws ArgumentCaptureException {
             switch (reader.readLine().toLowerCase()) {
-                case "yes" -> argumentCollector.add(SKIP_ZERO, true);
-                case "no" -> argumentCollector.add(SKIP_ZERO, false);
+                case "yes" -> args.skipEmpty = true;
+                case "no" -> args.skipEmpty = false;
                 default -> throw new ArgumentCaptureException("please answer 'yes' or 'no'");
             }
-        }
-
-        @Override
-        public Boolean resolve(final ArgumentAccessor argumentAccessor) {
-            return (Boolean) argumentAccessor.get(SKIP_ZERO);
         }
     };
 
@@ -77,15 +61,25 @@ public class ListFilesCommand implements Command {
     }
 
     @Override
-    public List<Argument<?>> getArguments() {
+    public List<Argument<Args>> getArguments() {
         return List.of(ARG_PATH, ARG_SKIP_ZERO);
     }
 
     @Override
-    public void run(final ConsoleWriter writer, final ArgumentAccessor argumentAccessor) {
-        final Path path = ARG_PATH.resolve(argumentAccessor);
-        final Boolean skipZero = ARG_SKIP_ZERO.resolve(argumentAccessor);
+    public void run(final ConsoleWriter writer, final Args args) {
+        final Path path = args.path;
+        final Boolean skipZero = args.skipEmpty;
 
-        System.out.printf("list files in %s, skip zero: %s\n", path, skipZero);
+        System.out.printf("list files in %s, skip empty: %s\n", path, skipZero);
+    }
+
+    @Override
+    public Args newArgumentCollector() {
+        return new Args();
+    }
+
+    static class Args {
+        Path path;
+        Boolean skipEmpty;
     }
 }

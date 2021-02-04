@@ -1,9 +1,7 @@
 package console.framework;
 
-public interface Argument<T> {
+public interface Argument<ARGS> {
     String getInvite();
 
-    void convert(ConsoleReader reader, ArgumentCollector argumentCollector) throws ArgumentCaptureException;
-
-    T resolve(ArgumentAccessor arguments);
+    void convert(ConsoleReader reader, ARGS args) throws ArgumentCaptureException;
 }

@@ -3,9 +3,9 @@ package console.framework;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CommandHandlerTest {
 
@@ -20,13 +20,10 @@ public class CommandHandlerTest {
                 .read("command invoked")
                 .build();
 
-        final String key0 = UUID.randomUUID().toString();
-        final String key1 = UUID.randomUUID().toString();
-
         new CommandHandlerImpl().handleCommand(
                 scenario::readLine,
                 scenario::writeLine,
-                new Command() {
+                new Command<HappyPathArgs>() {
 
                     @Override
                     public String getInvite() {
@@ -34,9 +31,9 @@ public class CommandHandlerTest {
                     }
 
                     @Override
-                    public List<Argument<?>> getArguments() {
+                    public List<Argument<HappyPathArgs>> getArguments() {
                         return List.of(
-                                new Argument<Boolean>() {
+                                new Argument<>() {
 
                                     @Override
                                     public String getInvite() {
@@ -46,19 +43,14 @@ public class CommandHandlerTest {
                                     @Override
                                     public void convert(
                                             final ConsoleReader reader,
-                                            final ArgumentCollector argumentCollector
+                                            final HappyPathArgs args
                                     ) {
                                         final String line = reader.readLine();
                                         assertEquals("hui", line);
-                                        argumentCollector.add(key0, true);
-                                    }
-
-                                    @Override
-                                    public Boolean resolve(final ArgumentAccessor arguments) {
-                                        throw new UnsupportedOperationException();
+                                        args.hui = true;
                                     }
                                 },
-                                new Argument<Integer>() {
+                                new Argument<>() {
 
                                     @Override
                                     public String getInvite() {
@@ -68,29 +60,29 @@ public class CommandHandlerTest {
                                     @Override
                                     public void convert(
                                             final ConsoleReader reader,
-                                            final ArgumentCollector argumentCollector
+                                            final HappyPathArgs args
                                     ) {
                                         final String line = reader.readLine();
                                         assertEquals("0", line);
-                                        argumentCollector.add(key1, Integer.parseInt(line));
-                                    }
-
-                                    @Override
-                                    public Integer resolve(final ArgumentAccessor arguments) {
-                                        throw new UnsupportedOperationException();
+                                        args.zeroOrOne = Integer.parseInt(line);
                                     }
                                 }
                         );
                     }
 
                     @Override
-                    public void run(final ConsoleWriter writer, final ArgumentAccessor argumentAccessor) {
+                    public void run(final ConsoleWriter writer, final HappyPathArgs args) {
                         scenario.checkStep("invoke command");
 
-                        assertEquals(true, argumentAccessor.get(key0));
-                        assertEquals(0, argumentAccessor.get(key1));
+                        assertTrue(args.hui);
+                        assertEquals(0, args.zeroOrOne);
 
                         writer.writeLine("command invoked");
+                    }
+
+                    @Override
+                    public HappyPathArgs newArgumentCollector() {
+                        return new HappyPathArgs();
                     }
                 }
         );
@@ -110,12 +102,10 @@ public class CommandHandlerTest {
                 .read("command invoked")
                 .build();
 
-        final String key1 = UUID.randomUUID().toString();
-
         new CommandHandlerImpl().handleCommand(
                 scenario::readLine,
                 scenario::writeLine,
-                new Command() {
+                new Command<EnterInvalidValueArgs>() {
 
                     @Override
                     public String getInvite() {
@@ -123,10 +113,9 @@ public class CommandHandlerTest {
                     }
 
                     @Override
-                    public List<Argument<?>> getArguments() {
+                    public List<Argument<EnterInvalidValueArgs>> getArguments() {
                         return List.of(
-                                new Argument<String>() {
-
+                                new Argument<>() {
                                     @Override
                                     public String getInvite() {
                                         return "0";
@@ -135,29 +124,29 @@ public class CommandHandlerTest {
                                     @Override
                                     public void convert(
                                             final ConsoleReader reader,
-                                            final ArgumentCollector argumentCollector
+                                            final EnterInvalidValueArgs args
                                     ) throws ArgumentCaptureException {
                                         final String line = reader.readLine();
                                         if (line.equals("0")) {
-                                            argumentCollector.add(key1, line);
+                                            args.zero = line;
                                         } else {
                                             throw new ArgumentCaptureException("0 is expected");
                                         }
-                                    }
-
-                                    @Override
-                                    public String resolve(final ArgumentAccessor arguments) {
-                                        throw new UnsupportedOperationException();
                                     }
                                 }
                         );
                     }
 
                     @Override
-                    public void run(final ConsoleWriter writer, final ArgumentAccessor argumentAccessor) {
+                    public EnterInvalidValueArgs newArgumentCollector() {
+                        return new EnterInvalidValueArgs();
+                    }
+
+                    @Override
+                    public void run(final ConsoleWriter writer, final EnterInvalidValueArgs args) {
                         scenario.checkStep("invoke command");
 
-                        assertEquals("0", argumentAccessor.get(key1));
+                        assertEquals("0", args.zero);
 
                         writer.writeLine("command invoked");
                     }
@@ -165,5 +154,14 @@ public class CommandHandlerTest {
         );
 
         scenario.checkFinish();
+    }
+
+    static class HappyPathArgs {
+        boolean hui;
+        int zeroOrOne;
+    }
+
+    static class EnterInvalidValueArgs {
+        String zero;
     }
 }
