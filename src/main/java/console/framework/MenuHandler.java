@@ -5,19 +5,19 @@ import java.util.List;
 import java.util.Map;
 
 import static console.framework.MenuHandler.Query.EMPTY;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 public class MenuHandler {
 
     private final Map<Integer, Option> options;
 
-    private Query query = EMPTY;
-
     public MenuHandler(final List<String> options) {
         this.options = prepareOptions(options);
     }
 
     public String handle(final ConsoleReader reader, final ConsoleWriter writer) {
+        Query query = EMPTY;
         while (true) {
             final Option exactlyMatched = findSingleExactlyMatched(query);
             if (exactlyMatched == null) {
@@ -25,27 +25,13 @@ public class MenuHandler {
                 if (filteredOptions.isEmpty()) {
                     writer.writeLine("no options for this query");
                     query = EMPTY;
-                    continue;
-                }
-                writer.writeLine("options:");
-                filteredOptions.forEach(option -> writer.writeLine(option.toString()));
-                while (true) {
-                    writer.writeLine("enter option number to choose or ?query to filter options");
-                    final String line = reader.readLine();
-                    if (line.startsWith("?")) {
-                        query = new Query(line.substring(1));
-                        break;
+                } else {
+                    printOptions(writer, filteredOptions);
+                    final QueryOrOption queryOrValue = queryOrChoose(reader, writer);
+                    if (queryOrValue.isOption()) {
+                        return queryOrValue.option.value;
                     } else {
-                        try {
-                            final int number = Integer.parseInt(line);
-                            final Option option = options.get(number);
-                            if (option != null) {
-                                return option.value;
-                            }
-                        } catch (final NumberFormatException e) {
-                            //ignore
-                        }
-                        writer.writeLine("invalid option number");
+                        query = queryOrValue.query;
                     }
                 }
             } else {
@@ -56,6 +42,32 @@ public class MenuHandler {
                     query = EMPTY;
                 }
             }
+        }
+    }
+
+    private void printOptions(final ConsoleWriter writer, final List<Option> filteredOptions) {
+        writer.writeLine("options:");
+        filteredOptions.forEach(option -> writer.writeLine(option.toString()));
+    }
+
+    private QueryOrOption queryOrChoose(final ConsoleReader reader, final ConsoleWriter writer) {
+        while (true) {
+            writer.writeLine("enter option number to choose or ?query to filter options");
+            final String line = reader.readLine();
+            if (line.startsWith("?")) {
+                return new QueryOrOption(new Query(line.substring(1)));
+            } else {
+                try {
+                    final int number = Integer.parseInt(line);
+                    final Option option = options.get(number);
+                    if (option != null) {
+                        return new QueryOrOption(option);
+                    }
+                } catch (final NumberFormatException e) {
+                    //ignore
+                }
+            }
+            writer.writeLine("invalid option number");
         }
     }
 
@@ -85,22 +97,40 @@ public class MenuHandler {
                 .collect(toList());
     }
 
-    static class Query {
+    static class QueryOrOption {
+        final Query query;
+        final Option option;
 
+        public QueryOrOption(final Query query) {
+            this.query = requireNonNull(query);
+            this.option = null;
+        }
+
+        public QueryOrOption(final Option option) {
+            this.option = requireNonNull(option);
+            this.query = null;
+        }
+
+        public boolean isOption() {
+            return option != null;
+        }
+    }
+
+    static class Query {
         static Query EMPTY = new Query("");
 
         final String valueLowerCase;
 
         Query(final String value) {
-            this.valueLowerCase = value.toLowerCase();
+            this.valueLowerCase = requireNonNull(value).toLowerCase();
         }
 
         boolean isMatched(final Option option) {
-            return option.valueLowerCase.contains(valueLowerCase);
+            return requireNonNull(option).valueLowerCase.contains(valueLowerCase);
         }
 
         boolean isExactlyMatched(final Option option) {
-            return option.valueLowerCase.equalsIgnoreCase(valueLowerCase);
+            return requireNonNull(option).valueLowerCase.equalsIgnoreCase(valueLowerCase);
         }
     }
 
@@ -111,7 +141,7 @@ public class MenuHandler {
 
         public Option(final int num, final String value) {
             this.num = num;
-            this.value = value;
+            this.value = requireNonNull(value);
             this.valueLowerCase = value.toLowerCase();
         }
 
