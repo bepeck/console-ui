@@ -1,14 +1,15 @@
 package console.framework;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static console.framework.MenuHandler.Query.EMPTY;
 import static java.util.stream.Collectors.toList;
 
 public class MenuHandler {
 
-    final List<Option> options;
+    final Map<Integer, Option> options;
 
     public MenuHandler(final List<String> options) {
         this.options = prepareOptions(options);
@@ -17,7 +18,7 @@ public class MenuHandler {
     public String handle(final ConsoleReader reader, final ConsoleWriter writer) {
         Query query = EMPTY;
         while (true) {
-            final Option exactlyMatched = singleOrNull(query);
+            final Option exactlyMatched = findSingleExactlyMatched(query);
             if (exactlyMatched == null) {
                 final List<Option> filteredOptions = findAll(query);
                 if (filteredOptions.isEmpty()) {
@@ -36,8 +37,9 @@ public class MenuHandler {
                     } else {
                         try {
                             final int number = Integer.parseInt(line);
-                            if (number >= 0 && number < options.size()) {
-                                return options.get(number).value;
+                            final Option option = options.get(number);
+                            if (option != null) {
+                                return option.value;
                             }
                         } catch (final NumberFormatException e) {
                             //ignore
@@ -56,28 +58,30 @@ public class MenuHandler {
         }
     }
 
-    private List<Option> prepareOptions(final List<String> options) {
-        final List<Option> result = new ArrayList<>();
+    private Map<Integer, Option> prepareOptions(final List<String> options) {
+        final Map<Integer, Option> result = new LinkedHashMap<>();
         for (int i = 0; i < options.size(); i++) {
-            result.add(new Option(i, options.get(i)));
+            result.put(i, new Option(i, options.get(i)));
+        }
+        if (result.keySet().size() < options.size()) {
+            throw new IllegalArgumentException("duplicated options");
         }
         return result;
     }
 
-    public Option singleOrNull(final Query query) {
-        final List<Option> filteredOptions = options.stream()
-                .filter(option -> option.valueLowerCase.equals(query.valueLowerCase))
-                .limit(2)
-                .collect(toList());
-        if (filteredOptions.size() == 1) {
-            return filteredOptions.get(0);
-        }
-        return null;
+    private Option findSingleExactlyMatched(final Query query) {
+        return options.values().stream()
+                .filter(query::isExactlyMatched)
+                .findAny()
+                .orElse(null);
     }
 
 
     private List<Option> findAll(final Query query) {
-        return options.stream().filter(option -> option.valueLowerCase.contains(query.valueLowerCase)).collect(toList());
+        return options.values()
+                .stream()
+                .filter(query::isMatched)
+                .collect(toList());
     }
 
     static class Query {
@@ -86,8 +90,16 @@ public class MenuHandler {
 
         final String valueLowerCase;
 
-        Query(String value) {
+        Query(final String value) {
             this.valueLowerCase = value.toLowerCase();
+        }
+
+        boolean isMatched(final Option option) {
+            return option.valueLowerCase.contains(valueLowerCase);
+        }
+
+        boolean isExactlyMatched(final Option option) {
+            return option.valueLowerCase.equalsIgnoreCase(valueLowerCase);
         }
     }
 
