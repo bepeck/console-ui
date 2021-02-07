@@ -9,14 +9,15 @@ import static java.util.stream.Collectors.toList;
 
 public class MenuHandler {
 
-    final Map<Integer, Option> options;
+    private final Map<Integer, Option> options;
+
+    private Query query = EMPTY;
 
     public MenuHandler(final List<String> options) {
         this.options = prepareOptions(options);
     }
 
     public String handle(final ConsoleReader reader, final ConsoleWriter writer) {
-        Query query = EMPTY;
         while (true) {
             final Option exactlyMatched = findSingleExactlyMatched(query);
             if (exactlyMatched == null) {
