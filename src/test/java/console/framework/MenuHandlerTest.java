@@ -17,6 +17,11 @@ public class MenuHandlerTest {
             )
     );
 
+    @Test(expected = IllegalArgumentException.class)
+    public void errorIfThereAreDuplicatedOptions() {
+        new MenuHandler("options:", List.of("aaa", "aaa"));
+    }
+
     @Test
     public void chooseOptionByNumber() {
         final ConsoleScenario scenario = ConsoleScenario.builder()
@@ -53,6 +58,34 @@ public class MenuHandlerTest {
         final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
 
         Assert.assertEquals("sOme", option);
+
+        scenario.checkFinish();
+    }
+
+    @Test
+    public void chooseOptionByExactMatchingAndDecline() {
+        final ConsoleScenario scenario = ConsoleScenario.builder()
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[1] - 'zone'")
+                .read("[2] - 'hoMe'")
+                .read("[3] - 'done'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("?some")
+                .read("confirm option '[0] - 'sOme'' (yes)")
+                .type("no")
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[1] - 'zone'")
+                .read("[2] - 'hoMe'")
+                .read("[3] - 'done'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("2")
+                .build();
+
+        final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
+
+        Assert.assertEquals("hoMe", option);
 
         scenario.checkFinish();
     }

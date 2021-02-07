@@ -1,5 +1,6 @@
 package console.framework;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,12 +75,12 @@ public class MenuHandler {
     }
 
     private Map<Integer, Option> prepareOptions(final List<String> options) {
+        if (new HashSet<>(options).size() < options.size()) {
+            throw new IllegalArgumentException("duplicated options");
+        }
         final Map<Integer, Option> result = new LinkedHashMap<>();
         for (int i = 0; i < options.size(); i++) {
             result.put(i, new Option(i, options.get(i)));
-        }
-        if (result.keySet().size() < options.size()) {
-            throw new IllegalArgumentException("duplicated options");
         }
         return result;
     }
