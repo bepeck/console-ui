@@ -7,15 +7,23 @@ import java.util.List;
 
 public class MenuHandlerTest {
 
-    final MenuHandler menuHandler = new MenuHandler("options:", List.of("some", "zone", "home", "done"));
+    final MenuHandler menuHandler = new MenuHandler(
+            "options:",
+            List.of(
+                    "sOme",
+                    "zone",
+                    "hoMe",
+                    "done"
+            )
+    );
 
     @Test
-    public void chooseOption() {
+    public void chooseOptionByNumber() {
         final ConsoleScenario scenario = ConsoleScenario.builder()
                 .read("options:")
-                .read("[0] - 'some'")
+                .read("[0] - 'sOme'")
                 .read("[1] - 'zone'")
-                .read("[2] - 'home'")
+                .read("[2] - 'hoMe'")
                 .read("[3] - 'done'")
                 .read("enter option number to choose or ?query to filter options")
                 .type("2")
@@ -23,7 +31,28 @@ public class MenuHandlerTest {
 
         final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
 
-        Assert.assertEquals("home", option);
+        Assert.assertEquals("hoMe", option);
+
+        scenario.checkFinish();
+    }
+
+    @Test
+    public void chooseOptionByExactMatching() {
+        final ConsoleScenario scenario = ConsoleScenario.builder()
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[1] - 'zone'")
+                .read("[2] - 'hoMe'")
+                .read("[3] - 'done'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("?some")
+                .read("confirm option '[0] - 'sOme'' (yes)")
+                .type("yes")
+                .build();
+
+        final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
+
+        Assert.assertEquals("sOme", option);
 
         scenario.checkFinish();
     }
@@ -32,9 +61,9 @@ public class MenuHandlerTest {
     public void enterInvalidOptionNumber() {
         final ConsoleScenario scenario = ConsoleScenario.builder()
                 .read("options:")
-                .read("[0] - 'some'")
+                .read("[0] - 'sOme'")
                 .read("[1] - 'zone'")
-                .read("[2] - 'home'")
+                .read("[2] - 'hoMe'")
                 .read("[3] - 'done'")
                 .read("enter option number to choose or ?query to filter options")
                 .type("100500")
@@ -54,9 +83,9 @@ public class MenuHandlerTest {
     public void enterNotNumberOption() {
         final ConsoleScenario scenario = ConsoleScenario.builder()
                 .read("options:")
-                .read("[0] - 'some'")
+                .read("[0] - 'sOme'")
                 .read("[1] - 'zone'")
-                .read("[2] - 'home'")
+                .read("[2] - 'hoMe'")
                 .read("[3] - 'done'")
                 .read("enter option number to choose or ?query to filter options")
                 .type("not_number_option")
@@ -73,20 +102,20 @@ public class MenuHandlerTest {
     }
 
     @Test
-    public void enterQueryWithoutMatchedOptionsCauseQueryReset() {
+    public void enteringOfQueryWithoutMatchedOptionsCauseQueryReset() {
         final ConsoleScenario scenario = ConsoleScenario.builder()
                 .read("options:")
-                .read("[0] - 'some'")
+                .read("[0] - 'sOme'")
                 .read("[1] - 'zone'")
-                .read("[2] - 'home'")
+                .read("[2] - 'hoMe'")
                 .read("[3] - 'done'")
                 .read("enter option number to choose or ?query to filter options")
                 .type("?irrelevant")
                 .read("no options for this query")
                 .read("options:")
-                .read("[0] - 'some'")
+                .read("[0] - 'sOme'")
                 .read("[1] - 'zone'")
-                .read("[2] - 'home'")
+                .read("[2] - 'hoMe'")
                 .read("[3] - 'done'")
                 .read("enter option number to choose or ?query to filter options")
                 .type("3")
@@ -95,6 +124,54 @@ public class MenuHandlerTest {
         final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
 
         Assert.assertEquals("done", option);
+
+        scenario.checkFinish();
+    }
+
+    @Test
+    public void enteringOfQueryWithMatchedOptionsCausesHidingOfUnmatchedOptions() {
+        final ConsoleScenario scenario = ConsoleScenario.builder()
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[1] - 'zone'")
+                .read("[2] - 'hoMe'")
+                .read("[3] - 'done'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("?om")
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[2] - 'hoMe'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("0")
+                .build();
+
+        final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
+
+        Assert.assertEquals("sOme", option);
+
+        scenario.checkFinish();
+    }
+
+    @Test
+    public void hiddenOptionCouldBeChosen() {
+        final ConsoleScenario scenario = ConsoleScenario.builder()
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[1] - 'zone'")
+                .read("[2] - 'hoMe'")
+                .read("[3] - 'done'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("?om")
+                .read("options:")
+                .read("[0] - 'sOme'")
+                .read("[2] - 'hoMe'")
+                .read("enter option number to choose or ?query to filter options")
+                .type("1")
+                .build();
+
+        final String option = menuHandler.handle(scenario::readLine, scenario::writeLine);
+
+        Assert.assertEquals("zone", option);
 
         scenario.checkFinish();
     }
