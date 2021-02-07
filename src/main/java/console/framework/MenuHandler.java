@@ -10,9 +10,11 @@ import static java.util.stream.Collectors.toList;
 
 public class MenuHandler {
 
+    private final String invite;
     private final Map<Integer, Option> options;
 
-    public MenuHandler(final List<String> options) {
+    public MenuHandler(final String invite, final List<String> options) {
+        this.invite = requireNonNull(invite);
         this.options = prepareOptions(options);
     }
 
@@ -46,7 +48,7 @@ public class MenuHandler {
     }
 
     private void printOptions(final ConsoleWriter writer, final List<Option> filteredOptions) {
-        writer.writeLine("options:");
+        writer.writeLine(invite);
         filteredOptions.forEach(option -> writer.writeLine(option.toString()));
     }
 
@@ -147,7 +149,7 @@ public class MenuHandler {
 
         @Override
         public String toString() {
-            return "[" + num + "]' - " + value;
+            return "[" + num + "] - '" + value + "'";
         }
     }
 }
