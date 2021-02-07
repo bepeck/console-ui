@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.util.List;
 
 import static console.framework.ConsoleScenario.builder;
+import static org.junit.Assert.fail;
 
 public class CommandRouterTest {
 
@@ -160,6 +161,27 @@ public class CommandRouterTest {
         }
 
         scenario.checkFinish();
+    }
+
+    @Test
+    public void doNotAllowDuplicatedInvites() {
+        try {
+            new CommandRouter(
+                    List.of(
+                            newCommand("command 1"),
+                            newCommand("command 1")
+                    ),
+                    new CommandHandler() {
+                        @Override
+                        public <ARGS> void handleCommand(ConsoleReader r, ConsoleWriter w, Command<ARGS> command) {
+                            throw new UnsupportedOperationException();
+                        }
+                    }
+            );
+            fail("noway");
+        } catch (final IllegalArgumentException e) {
+            Assert.assertEquals("duplicated invites", e.getMessage());
+        }
     }
 
     private Command<?> newCommand(String name) {

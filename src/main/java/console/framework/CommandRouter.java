@@ -21,7 +21,7 @@ public class CommandRouter {
     private void checkInvitesUnique(final List<Command<?>> commands) {
         final long count = requireNonNull(commands).stream().map(Command::getInvite).distinct().count();
         if (count != commands.size()) {
-            throw new IllegalArgumentException("there are non-unique invites");
+            throw new IllegalArgumentException("duplicated invites");
         }
     }
 
